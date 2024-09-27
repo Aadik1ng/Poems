@@ -1,0 +1,11 @@
+data:
+  form: "data/form_poems.txt"
+  topic: "data/topic_poems.txt"
+model:
+  name: "gpt2"
+  save_path: "models/poem_generator_model"
+training:
+  epochs: 3
+  batch_size: 4
+  save_steps: 10000
+  max_steps: 1000
