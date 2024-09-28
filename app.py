@@ -1,13 +1,12 @@
 import streamlit as st
-from scripts.generate_poem import generate_poem
 from scripts.utils import load_config
-from scripts.generate_sonnets import generate_text
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from scripts.generate import generate_text
 # Load configuration
 config = load_config()
 
 # Streamlit UI
-st.title('Poem n Sonnets')
+st.title('Poem and Sonnet Generator')
 st.write('Generate poems or sonnets using pre-trained GPT-2 models.')
 
 # Function to create a tooltip
@@ -59,7 +58,7 @@ if st.button('Generate Text'):
         if gen_type == 'Poem':
             with st.spinner('Generating poem...'):
                 model_path = config['model']['save_path']
-                poem = generate_poem(
+                poem = generate_text(
                     prompt, 
                     model_path, 
                     max_length=max_length, 
@@ -73,20 +72,19 @@ if st.button('Generate Text'):
                 st.text_area('Generated Poem', poem, height=200)
         elif gen_type == 'Sonnet':
             with st.spinner('Generating sonnet...'):
-                model_save_path = config['model']['save_path2']
-                generated_text = generate_text(
-                    GPT2LMHeadModel.from_pretrained(model_save_path).to('cuda'), 
-                    GPT2Tokenizer.from_pretrained(model_save_path), 
+                model_path = config['model']['save_path2']
+                sonnet = generate_text(
                     prompt, 
-                    max_length=max_length,
+                    model_path, 
+                    max_length=max_length, 
+                    num_return_sequences=num_return_sequences,
                     temperature=temperature,
                     top_p=top_p,
                     top_k=top_k,
-                    repetition_penalty=repetition_penalty,
-                    num_return_sequences=num_return_sequences
+                    repetition_penalty=repetition_penalty
                 )
                 st.success('Sonnet generated!')
-                st.text_area('Generated Sonnet', generated_text, height=200)
+                st.text_area('Generated Sonnet', sonnet, height=200)
     else:
         st.warning('Please enter a prompt.')
 

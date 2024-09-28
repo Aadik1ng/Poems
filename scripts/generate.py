@@ -2,7 +2,7 @@ import yaml
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 from scripts.utils import load_config
 
-def generate_poem(prompt, model_path, max_length=100, num_return_sequences=1, temperature=0.7, top_p=0.9, top_k=50, repetition_penalty=2.0):
+def generate_text(prompt, model_path, max_length=100, num_return_sequences=1, temperature=0.7, top_p=0.9, top_k=50, repetition_penalty=2.0):
     # Load the model and tokenizer
     model = GPT2LMHeadModel.from_pretrained(model_path)
     tokenizer = GPT2Tokenizer.from_pretrained(model_path)
@@ -14,7 +14,7 @@ def generate_poem(prompt, model_path, max_length=100, num_return_sequences=1, te
     inputs = tokenizer.encode(prompt, return_tensors="pt")
     attention_mask = (inputs != tokenizer.pad_token_id).long()
 
-    # Generate the poem text with adjustable parameters
+    # Generate the text with adjustable parameters
     outputs = model.generate(
         inputs,
         attention_mask=attention_mask,
@@ -35,8 +35,18 @@ if __name__ == "__main__":
     # Load configuration
     config = load_config()
 
-    model_path = config['model']['save_path']  # Update with the path to your saved model
-    prompt = "The autumn leaves"  # Change the prompt as needed
+    poem_model_path = config['model']['save_path']  # Path to the poem model
+    sonnet_model_path = config['model']['save_path2']  # Path to the sonnet model
 
-    poem = generate_poem(prompt, model_path)
-    print(poem)
+    poem_prompt = "The autumn leaves"  # Change the prompt as needed
+    sonnet_prompt = "Shall I compare thee to a summer's day"  # Change the prompt as needed
+
+    # Generate poem
+    print("Generating Poem...")
+    poem = generate_text(poem_prompt, poem_model_path)
+    print("\nGenerated Poem:\n", poem)
+
+    # Generate sonnet
+    print("Generating Sonnet...")
+    sonnet = generate_text(sonnet_prompt, sonnet_model_path)
+    print("\nGenerated Sonnet:\n", sonnet)
