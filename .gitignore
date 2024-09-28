@@ -2,5 +2,7 @@
 /models
 /poem_env
 /.dvc
-/results
+/.results
 /.zen
+/mlruns
+/results
