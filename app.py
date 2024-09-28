@@ -1,9 +1,22 @@
+import os
+import subprocess
 import streamlit as st
 from scripts.utils import load_config
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 from scripts.generate import generate_text
+
 # Load configuration
 config = load_config()
+
+# Function to check if the model exists
+def check_model_existence(model_path):
+    return os.path.exists(model_path)
+
+# Function to train the model if it does not exist
+def train_model():
+    with st.spinner('Training the model... This may take a while.'):
+        subprocess.run(["python", "scripts/model_training.py"])
+    st.success('Model training completed!')
 
 # Streamlit UI
 st.title('Poem and Sonnet Generator')
@@ -52,15 +65,22 @@ if gen_type == 'Poem' or gen_type == 'Sonnet':
     repetition_penalty = st.slider('Repetition Penalty:', min_value=1.0, max_value=5.0, value=2.0, step=0.1, help='Penalty for repeating the same token.')
     st.markdown(create_tooltip('', 'Penalty for repeating the same token.'), unsafe_allow_html=True)
 
+# Check and train model if necessary
+model_path_poem = config['model']['save_path']
+model_path_sonnet = config['model']['save_path2']
+
+if not check_model_existence(model_path_poem) or not check_model_existence(model_path_sonnet):
+    st.warning('Model not found. Training the model now...')
+    train_model()
+
 # Generate button
 if st.button('Generate Text'):
     if prompt:
         if gen_type == 'Poem':
             with st.spinner('Generating poem...'):
-                model_path = config['model']['save_path']
                 poem = generate_text(
                     prompt, 
-                    model_path, 
+                    model_path_poem, 
                     max_length=max_length, 
                     num_return_sequences=num_return_sequences,
                     temperature=temperature,
@@ -72,10 +92,9 @@ if st.button('Generate Text'):
                 st.text_area('Generated Poem', poem, height=200)
         elif gen_type == 'Sonnet':
             with st.spinner('Generating sonnet...'):
-                model_path = config['model']['save_path2']
                 sonnet = generate_text(
                     prompt, 
-                    model_path, 
+                    model_path_sonnet, 
                     max_length=max_length, 
                     num_return_sequences=num_return_sequences,
                     temperature=temperature,
