@@ -3,7 +3,6 @@ from scripts.generate_poem import generate_poem
 from scripts.utils import load_config
 from scripts.generate_sonnets import generate_text
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
-
 # Load configuration
 config = load_config()
 

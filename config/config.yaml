@@ -10,7 +10,7 @@ data:
 
 training:
   output_dir: "./results"
-  epochs: 3
+  epochs: 5
   batch_size: 4
-  save_steps: 10
+  save_steps: 500
   max_steps: 1000

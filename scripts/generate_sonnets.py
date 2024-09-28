@@ -2,7 +2,7 @@ import os
 import yaml
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
-from scripts.utils import load_config
+from utils import load_config
 
 def generate_text(model, tokenizer, prompt, max_length=100, temperature=0.7, top_p=0.9, top_k=50, repetition_penalty=2.0, num_return_sequences=1):
     # Encode the prompt

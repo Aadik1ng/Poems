@@ -1,9 +1,8 @@
 import os
+import torch
 import yaml
-from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, TextDataset, DataCollatorForLanguageModeling
-from utils import load_config,load_dataset
-
-
+from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from utils import load_config, load_dataset
 
 def main():
     config = load_config()
@@ -12,19 +11,26 @@ def main():
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     model = GPT2LMHeadModel.from_pretrained(model_name)
 
-    form_dataset = load_dataset(config['data']['form'], tokenizer)
-    topic_dataset = load_dataset(config['data']['topic'], tokenizer)
+    # Load datasets for poems and sonnets
+    poem_dataset = load_dataset(config['data']['form'], tokenizer)
+    sonnet_dataset = load_dataset(config['data']['shakespeare'], tokenizer)
     
-    combined_dataset = form_dataset + topic_dataset
-    #for sonnets uncomment the below and comment the above
-    #shakespeare_dataset = load_dataset('data\shakespeare.txt',tokenizer)
-    if not combined_dataset:#+
-        output_dir='williams'
-    else: 
-        output_dir='poems'
+    # Define output directories for models
+    base_output_dir = 'models'
+    poem_output_dir = os.path.join(base_output_dir, 'poems')
+    sonnet_output_dir = os.path.join(base_output_dir, 'sonnets')
     
-    training_args = TrainingArguments(
-        output_dir="./results/f'{output_dir}'",
+    # Create directories if they don't exist
+    os.makedirs(poem_output_dir, exist_ok=True)
+    os.makedirs(sonnet_output_dir, exist_ok=True)
+
+    # Check if GPU is available and use it if so
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model.to(device)
+
+    # Training for Poem Model
+    poem_training_args = TrainingArguments(
+        output_dir=poem_output_dir,
         overwrite_output_dir=True,
         num_train_epochs=config['training']['epochs'],
         per_device_train_batch_size=config['training']['batch_size'],
@@ -32,22 +38,39 @@ def main():
         max_steps=config['training']['max_steps'],
     )
 
-    trainer = Trainer(
-        model=model.to('cuda'),
-        args=training_args,
+    poem_trainer = Trainer(
+        model=model,
+        args=poem_training_args,
         data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
-        train_dataset=combined_dataset,#shakespeare_dataset
+        train_dataset=poem_dataset,
     )
 
-    trainer.train()
-    if(combined_dataset):
-        trainer.save_model(config['model']['save_path'])
-        tokenizer.save_pretrained(config['model']['save_path']) 
-    else:
-        trainer.save_model(config['model']['save_path2'])
-        tokenizer.save_pretrained(config['model']['save_path2'])  
+    print("Training Poem Model on", device + "...")
+    poem_trainer.train()
+    poem_trainer.save_model(poem_output_dir)
+    tokenizer.save_pretrained(poem_output_dir)
 
+    # Training for Sonnet Model
+    sonnet_training_args = TrainingArguments(
+        output_dir=sonnet_output_dir,
+        overwrite_output_dir=True,
+        num_train_epochs=config['training']['epochs'],
+        per_device_train_batch_size=config['training']['batch_size'],
+        save_steps=config['training']['save_steps'],
+        max_steps=config['training']['max_steps'],
+    )
 
+    sonnet_trainer = Trainer(
+        model=model,
+        args=sonnet_training_args,
+        data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
+        train_dataset=sonnet_dataset,
+    )
+
+    print("Training Sonnet Model on", device + "...")
+    sonnet_trainer.train()
+    sonnet_trainer.save_model(sonnet_output_dir)
+    tokenizer.save_pretrained(sonnet_output_dir)
 
 if __name__ == "__main__":
     main()
